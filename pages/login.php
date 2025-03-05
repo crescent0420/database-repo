@@ -2,27 +2,34 @@
 session_start();
 include '../config.php'; // Ensure database connection
 
-$message = ""; // Message to show errors
+$message = ""; // Message for errors
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $username = trim($_POST['username']);
     $password = trim($_POST['password']);
 
     if (!empty($username) && !empty($password)) {
-        // Prepare SQL query to check user
-        $sql = "SELECT id, username, password FROM users WHERE username = :username";
-        $stmt = $pdo->prepare($sql);
-        $stmt->bindParam(':username', $username);
-        $stmt->execute();
-        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+        try {
+            // Prepare SQL query to check user (Optimized with LIMIT 1)
+            $sql = "SELECT id, username, password FROM users WHERE username = :username LIMIT 1";
+            $stmt = $pdo->prepare($sql);
+            $stmt->bindParam(':username', $username, PDO::PARAM_STR);
+            $stmt->execute();
+            $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        if ($user && password_verify($password, $user['password'])) {
-            $_SESSION['user_id'] = $user['id'];
-            $_SESSION['username'] = $user['username'];
-            header("Location: dashboard.php"); // Redirect after successful login
-            exit();
-        } else {
-            $message = "Invalid username or password!";
+            // Verify password and set session if valid
+            if ($user && password_verify($password, $user['password'])) {
+                session_regenerate_id(true); // Prevent session fixation attacks
+                $_SESSION['user_id'] = $user['id'];
+                $_SESSION['username'] = $user['username'];
+
+                header("Location: dashboard.php");
+                exit();
+            } else {
+                $message = "Invalid username or password!";
+            }
+        } catch (PDOException $e) {
+            $message = "Database error: " . $e->getMessage();
         }
     } else {
         $message = "Please fill in both fields!";
@@ -60,7 +67,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <div class="login-container">
     <h2>Login to Dream Home</h2>
     <?php if (!empty($message)): ?>
-        <div class="alert alert-danger"><?= $message ?></div>
+        <div class="alert alert-danger"><?= htmlspecialchars($message) ?></div>
     <?php endif; ?>
     <form method="POST" action="">
         <div class="mb-3">

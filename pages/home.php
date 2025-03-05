@@ -63,9 +63,6 @@ $logoImage = "../assets/img/logo.png";  // Ensure this file exists in assets/img
                     <a class="nav-link" href="login.php"><i class="fas fa-sign-in-alt"></i> Login</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="dashboard.php"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
-                </li>
-                <li class="nav-item">
                     <a class="nav-link" href="logout.php"><i class="fas fa-sign-out-alt"></i> Logout</a>
                 </li>
             </ul>
